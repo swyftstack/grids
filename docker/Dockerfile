@@ -2,7 +2,7 @@
 
 # ── Stage 1: build the frontend bundle and the web server ─────────────────────
 # Node 24 ships a built-in SQLite (`node:sqlite`), used by the auth store — no native module needed.
-FROM node:24-bookworm-slim AS builder
+FROM node:26-bookworm-slim AS builder
 ENV PNPM_HOME=/pnpm
 ENV PATH=$PNPM_HOME:$PATH
 RUN corepack enable
@@ -27,7 +27,7 @@ RUN pnpm --filter @swyftgrid/core build \
 RUN pnpm --filter @swyftgrid/web deploy --prod /app/deploy
 
 # ── Stage 2: minimal runtime ──────────────────────────────────────────────────
-FROM node:24-bookworm-slim AS runtime
+FROM node:26-bookworm-slim AS runtime
 ENV NODE_ENV=production
 ENV PORT=4000
 ENV SWYFTGRID_DATA_DIR=/data
