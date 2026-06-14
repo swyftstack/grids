@@ -1,0 +1,11 @@
+blank_issues_enabled: false
+contact_links:
+  - name: 💬 Discussions
+    url: https://github.com/swyftstack/grids/discussions
+    about: Ask questions, share ideas, and talk with the community.
+  - name: 🔒 Report a security vulnerability
+    url: https://github.com/swyftstack/grids/security/advisories/new
+    about: Please report vulnerabilities privately, not as a public issue.
+  - name: 📖 Documentation
+    url: https://github.com/swyftstack/grids/tree/main/docs
+    about: Read the docs before opening an issue.

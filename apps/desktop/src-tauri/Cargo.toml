@@ -1,0 +1,72 @@
+[package]
+name = "swyftgrid"
+version = "0.1.0"
+description = "A modern, fast, beautiful PostgreSQL client."
+authors = ["Swyftgrids Contributors"]
+license = "MIT"
+repository = "https://github.com/swyftstack/grids"
+edition = "2021"
+rust-version = "1.77"
+
+# The library powers both the binary and (potentially) mobile targets.
+[lib]
+name = "swyftgrid_lib"
+crate-type = ["staticlib", "cdylib", "rlib"]
+
+[build-dependencies]
+tauri-build = { version = "2.0", features = [] }
+
+[dependencies]
+tauri = { version = "2.0", features = ["devtools"] }
+tauri-plugin-dialog = "2.0"
+tauri-plugin-os = "2.0"
+tauri-plugin-shell = "2.0"
+
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+thiserror = "1"
+anyhow = "1"
+
+# Async runtime + PostgreSQL driver
+tokio = { version = "1", features = ["rt-multi-thread", "macros", "sync", "time", "net", "io-util"] }
+# Pure-Rust SSH client for tunnelling through SSH servers, bastions, and jump hosts.
+russh = "0.45"
+russh-keys = "0.45"
+# russh's client::Handler trait is an `#[async_trait]`; our handler impl must match.
+async-trait = "0.1"
+tokio-postgres = { version = "0.7", features = [
+    "with-serde_json-1",
+    "with-uuid-1",
+    "with-chrono-0_4",
+] }
+# Pure-Rust TLS so we don't depend on a system OpenSSL across platforms.
+tokio-postgres-rustls = "0.12"
+rustls = { version = "0.23", default-features = false, features = ["ring"] }
+rustls-pki-types = "1"
+webpki-roots = "0.26"
+
+# Local application store
+rusqlite = { version = "0.32", features = ["bundled"] }
+# OS keychain for credentials
+keyring = { version = "3", features = ["apple-native", "windows-native", "linux-native"] }
+
+chrono = { version = "0.4", features = ["serde"] }
+uuid = { version = "1", features = ["v4", "serde"] }
+# Decodes PostgreSQL NUMERIC/DECIMAL into a lossless string.
+rust_decimal = { version = "1", features = ["db-tokio-postgres"] }
+csv = "1"
+parking_lot = "0.12"
+dashmap = "6"
+# Host CPU / memory / disk metrics for the realtime Monitoring tab.
+sysinfo = "0.32"
+
+[features]
+# Default Tauri custom-protocol for production builds.
+custom-protocol = ["tauri/custom-protocol"]
+
+[profile.release]
+panic = "abort"
+codegen-units = 1
+lto = true
+opt-level = "s"
+strip = true

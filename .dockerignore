@@ -1,0 +1,10 @@
+**/node_modules
+**/dist
+**/build
+**/target
+**/.turbo
+**/coverage
+.git
+*.log
+data
+apps/desktop/src-tauri/target

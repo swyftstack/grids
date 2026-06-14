@@ -1,0 +1,51 @@
+name: 💡 Feature request
+description: Suggest an idea for Swyftgrids
+title: '[Feature]: '
+labels: ['enhancement']
+body:
+  - type: textarea
+    id: problem
+    attributes:
+      label: What problem does this solve?
+      description: Describe the pain point or use case. "I'm always frustrated when…"
+    validations:
+      required: true
+
+  - type: textarea
+    id: solution
+    attributes:
+      label: Proposed solution
+      description: What would you like to happen?
+    validations:
+      required: true
+
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternatives considered
+
+  - type: dropdown
+    id: area
+    attributes:
+      label: Area
+      options:
+        - Connection Manager
+        - Schema Explorer
+        - Table Browser
+        - SQL Editor
+        - Saved Queries
+        - ER Diagram
+        - Command Palette / Search
+        - AI features
+        - Self-hosting / Docker
+        - Other
+    validations:
+      required: true
+
+  - type: checkboxes
+    id: scope
+    attributes:
+      label: Scope check
+      options:
+        - label: This fits Swyftgrids's focus on a fast, minimal, PostgreSQL-first client.
+          required: true

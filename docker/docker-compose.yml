@@ -1,0 +1,60 @@
+# Swyftgrids self-hosted deployment.
+#
+#   docker compose -f docker/docker-compose.yml up -d
+#
+# Then open http://localhost:4000. The optional `postgres` service gives you a database to connect
+# to out of the box (host: postgres, user: swyftgrid, password: swyftgrid, db: swyftgrid_demo).
+
+services:
+  swyftgrid:
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile
+    image: swyftstack/grids:latest
+    container_name: swyftgrid
+    restart: unless-stopped
+    ports:
+      - '4000:4000'
+    environment:
+      PORT: '4000'
+      LOG_LEVEL: info
+      # ── Authentication (self-hosted only) ─────────────────────────────────────
+      # On first run, open the app and create the admin account in the setup wizard.
+      #
+      # Optional: bootstrap the admin non-interactively (applied once, only if no account exists).
+      # SWYFT_ADMIN_EMAIL: 'admin@example.com'
+      # SWYFT_ADMIN_PASSWORD: 'change-me-please'
+      #
+      # Optional: skip authentication entirely (ONLY behind a trusted network / VPN / auth proxy).
+      # SWYFT_AUTH_DISABLED: 'true'
+      #
+      # Optional: session lifetime in days (default 30) and cookie Secure flag (auto|true|false).
+      # SWYFT_SESSION_DAYS: '30'
+      # SWYFT_COOKIE_SECURE: 'auto'
+    volumes:
+      - swyftgrid-data:/data
+    depends_on:
+      - postgres
+
+  # Optional demo database — remove this service to connect only to your own databases.
+  postgres:
+    image: postgres:16-alpine
+    container_name: swyftgrid-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: swyftgrid
+      POSTGRES_PASSWORD: swyftgrid
+      POSTGRES_DB: swyftgrid_demo
+    ports:
+      - '5432:5432'
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U swyftgrid']
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+volumes:
+  swyftgrid-data:
+  postgres-data:

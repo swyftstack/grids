@@ -1,0 +1,51 @@
+<!doctype html>
+<html lang="en" class="dark">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+    <title>Swyftgrids · The modern PostgreSQL client</title>
+    <meta
+      name="description"
+      content="Swyftgrids is a fast, lightweight, open-source PostgreSQL client. SQL editor, schema visualization, query analysis, backups, optional AI workflows, and production safety. Free for Windows, macOS, and Linux."
+    />
+    <link rel="canonical" href="https://grids.swyftstack.com/" />
+    <meta name="theme-color" content="#f97316" />
+    <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+
+    <!-- Open Graph -->
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content="Swyftgrids" />
+    <meta property="og:title" content="Swyftgrids · The modern PostgreSQL client" />
+    <meta
+      property="og:description"
+      content="A fast, lightweight, open-source PostgreSQL client. SQL editor, schema diagrams, query analysis, backups, and optional AI. Free for Windows, macOS, and Linux."
+    />
+    <meta property="og:url" content="https://grids.swyftstack.com/" />
+    <meta property="og:image" content="https://grids.swyftstack.com/og.svg" />
+
+    <!-- Twitter -->
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content="Swyftgrids · The modern PostgreSQL client" />
+    <meta
+      name="twitter:description"
+      content="A fast, lightweight, open-source PostgreSQL client. Free for Windows, macOS, and Linux."
+    />
+    <meta name="twitter:image" content="https://grids.swyftstack.com/og.svg" />
+
+    <script>
+      // Apply the saved theme before paint to avoid a flash. Defaults to dark.
+      (function () {
+        try {
+          var t = localStorage.getItem('swyftgrid-marketing-theme');
+          if (t === 'light') document.documentElement.classList.remove('dark');
+          else document.documentElement.classList.add('dark');
+        } catch (e) {}
+      })();
+    </script>
+  </head>
+  <body>
+    <div id="root"></div>
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
+</html>

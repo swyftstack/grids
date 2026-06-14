@@ -1,0 +1,40 @@
+@import '../../../packages/ui/src/tokens.css';
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  html {
+    scroll-behavior: smooth;
+  }
+  body {
+    @apply bg-bg text-content font-sans antialiased;
+    margin: 0;
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
+  }
+}
+
+@layer utilities {
+  /* Brand gradient text used for the accent word in the hero. */
+  .text-gradient {
+    background: linear-gradient(92deg, rgb(var(--sg-accent)) 0%, #fbbf24 100%);
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+  }
+  .hero-grid {
+    background-image:
+      linear-gradient(rgb(var(--sg-border) / 0.5) 1px, transparent 1px),
+      linear-gradient(90deg, rgb(var(--sg-border) / 0.5) 1px, transparent 1px);
+    background-size: 44px 44px;
+    -webkit-mask-image: radial-gradient(ellipse 70% 60% at 50% 0%, black 30%, transparent 75%);
+    mask-image: radial-gradient(ellipse 70% 60% at 50% 0%, black 30%, transparent 75%);
+  }
+  /* Subtle dotted canvas behind the ER-diagram mock. */
+  .erd-canvas {
+    background-image: radial-gradient(rgb(var(--sg-border-strong) / 0.6) 1px, transparent 1px);
+    background-size: 16px 16px;
+  }
+}

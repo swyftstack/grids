@@ -1,0 +1,146 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+permissions:
+  contents: write
+  packages: write
+
+jobs:
+  desktop:
+    name: Build desktop installers
+    # Exposed to step `if:` guards so the R2 upload is skipped when R2 isn't configured.
+    env:
+      R2_ACCOUNT_ID: ${{ secrets.R2_ACCOUNT_ID }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - platform: macos-latest # Universal macOS (.dmg)
+            args: '--target universal-apple-darwin'
+          - platform: ubuntu-latest # Linux (.AppImage, .deb)
+            args: ''
+          - platform: windows-latest # Windows (.exe / NSIS)
+            args: ''
+    runs-on: ${{ matrix.platform }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 9
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: pnpm
+
+      - name: Install Linux dependencies
+        if: matrix.platform == 'ubuntu-latest'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libwebkit2gtk-4.1-dev libappindicator3-dev librsvg2-dev patchelf libgtk-3-dev
+
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: ${{ matrix.platform == 'macos-latest' && 'aarch64-apple-darwin,x86_64-apple-darwin' || '' }}
+
+      - uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: apps/desktop/src-tauri
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Build shared packages
+        run: pnpm --filter @swyftgrid/core build
+
+      - name: Build & release Tauri app
+        uses: tauri-apps/tauri-action@v0
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          projectPath: apps/desktop
+          tagName: ${{ github.ref_name }}
+          releaseName: 'Swyftgrids ${{ github.ref_name }}'
+          releaseBody: 'See the assets below to download and install Swyftgrids for your platform.'
+          releaseDraft: true
+          prerelease: false
+          args: ${{ matrix.args }}
+
+      # Publish the installer to Cloudflare R2 so the marketing site can serve direct downloads
+      # from files.grids.swyftstack.com (no GitHub redirect). Skipped if R2 secrets aren't set.
+      # Required repo secrets: R2_ACCOUNT_ID, R2_ACCESS_KEY_ID, R2_SECRET_ACCESS_KEY, R2_BUCKET.
+      - name: Upload installer to Cloudflare R2
+        if: ${{ env.R2_ACCOUNT_ID != '' }}
+        shell: bash
+        env:
+          AWS_ACCESS_KEY_ID: ${{ secrets.R2_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.R2_SECRET_ACCESS_KEY }}
+          AWS_DEFAULT_REGION: auto
+          R2_BUCKET: ${{ secrets.R2_BUCKET }}
+        run: |
+          set -euo pipefail
+          endpoint="https://${R2_ACCOUNT_ID}.r2.cloudflarestorage.com"
+          ver="${GITHUB_REF_NAME}"
+          case "${{ matrix.platform }}" in
+            windows-latest)
+              src=$(ls apps/desktop/src-tauri/target/release/bundle/nsis/*-setup.exe | head -1)
+              name="Swyftgrids-Setup.exe"; ct="application/octet-stream" ;;
+            macos-latest)
+              src=$(ls apps/desktop/src-tauri/target/universal-apple-darwin/release/bundle/dmg/*.dmg | head -1)
+              name="Swyftgrids.dmg"; ct="application/x-apple-diskimage" ;;
+            ubuntu-latest)
+              src=$(ls apps/desktop/src-tauri/target/release/bundle/appimage/*.AppImage | head -1)
+              name="Swyftgrids.AppImage"; ct="application/octet-stream" ;;
+            *) echo "Unknown platform"; exit 1 ;;
+          esac
+          echo "Uploading $src -> r2://$R2_BUCKET/{latest,$ver}/$name"
+          # `latest/<name>` is the stable URL the site points at; `<tag>/<name>` is the archived copy.
+          aws s3 cp "$src" "s3://${R2_BUCKET}/latest/${name}" \
+            --endpoint-url "$endpoint" --content-type "$ct" \
+            --content-disposition "attachment; filename=\"${name}\"" \
+            --cache-control "public, max-age=300"
+          aws s3 cp "$src" "s3://${R2_BUCKET}/${ver}/${name}" \
+            --endpoint-url "$endpoint" --content-type "$ct" \
+            --content-disposition "attachment; filename=\"${name}\"" \
+            --cache-control "public, max-age=31536000, immutable"
+
+  docker:
+    name: Build & push Docker image
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: docker/setup-buildx-action@v3
+
+      - name: Log in to GitHub Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Extract metadata
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ghcr.io/${{ github.repository }}
+          tags: |
+            type=semver,pattern={{version}}
+            type=semver,pattern={{major}}.{{minor}}
+            type=raw,value=latest
+
+      - name: Build & push
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: docker/Dockerfile
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max

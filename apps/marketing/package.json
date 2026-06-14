@@ -1,0 +1,31 @@
+{
+  "name": "@swyftgrid/marketing",
+  "version": "0.1.0",
+  "description": "Marketing site for Swyftgrids, the modern PostgreSQL client.",
+  "license": "MIT",
+  "type": "module",
+  "scripts": {
+    "dev": "node scripts/dev-with-demo.mjs",
+    "dev:site": "vite",
+    "build": "tsc --noEmit && vite build",
+    "build:cf": "node scripts/build-with-demo.mjs",
+    "preview": "vite preview",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@swyftgrid/ui": "workspace:*",
+    "lucide-react": "^0.451.0",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1"
+  },
+  "devDependencies": {
+    "@types/react": "^18.3.10",
+    "@types/react-dom": "^18.3.0",
+    "@vitejs/plugin-react": "^4.3.2",
+    "autoprefixer": "^10.4.20",
+    "postcss": "^8.4.47",
+    "tailwindcss": "^3.4.13",
+    "typescript": "^5.6.2",
+    "vite": "^6.4.2"
+  }
+}

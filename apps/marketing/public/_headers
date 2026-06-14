@@ -1,0 +1,21 @@
+# Cloudflare Pages headers.
+# https://developers.cloudflare.com/pages/configuration/headers/
+
+# Hashed build assets are immutable — cache them hard (site and the /demo app).
+/assets/*
+  Cache-Control: public, max-age=31536000, immutable
+/demo/assets/*
+  Cache-Control: public, max-age=31536000, immutable
+
+# Desktop installers: force a download rather than navigation, and don't cache
+# stale builds for too long.
+/downloads/*
+  Content-Disposition: attachment
+  Cache-Control: public, max-age=3600
+
+# Sensible security headers for the whole site.
+/*
+  X-Content-Type-Options: nosniff
+  X-Frame-Options: DENY
+  Referrer-Policy: strict-origin-when-cross-origin
+  Permissions-Policy: interest-cohort=()

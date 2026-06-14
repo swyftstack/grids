@@ -1,0 +1,5 @@
+# Cloudflare Pages project config (for `wrangler pages deploy` and CI).
+# Dashboard deploys can set these in the UI instead; this file documents them.
+name = "swyftgrids"
+pages_build_output_dir = "dist"
+compatibility_date = "2024-10-01"

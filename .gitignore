@@ -1,0 +1,90 @@
+# Dependencies
+node_modules/
+.pnpm-store/
+
+# Build output
+dist/
+dist-ssr/
+build/
+out/
+*.tsbuildinfo
+# Vite caches & dep-optimizer / config timestamp files
+.vite/
+vite.config.ts.timestamp-*
+vite.config.js.timestamp-*
+
+# Tauri / Rust
+apps/desktop/src-tauri/target/
+**/target/
+**/*.rs.bk
+Cargo.lock.orig
+
+# Local data / SQLite app store (incl. self-hosted auth + JSON stores)
+*.sqlite
+*.sqlite3
+*.sqlite-wal
+*.sqlite-shm
+*.db
+data/
+apps/web/data/
+swyftgrid.json
+auth.sqlite
+
+# Env & secrets
+.env
+.env.*
+!.env.example
+
+# SSH keys / certs — never commit credentials (referenced by path, not stored in-repo)
+*.pem
+*.key
+*.ppk
+id_rsa*
+id_ed25519*
+*_rsa
+*_ed25519
+
+# Editor / OS
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/*
+!.vscode/extensions.json
+!.vscode/settings.json.example
+*.log
+npm-debug.log*
+pnpm-debug.log*
+
+# Test / coverage
+coverage/
+.nyc_output/
+playwright-report/
+test-results/
+*.lcov
+junit.xml
+__snapshots__/*.snap.new
+
+# Editor swap / temp / scratch files
+*.swp
+*.swo
+*~
+*.bak
+*.orig
+*.tmp
+.scratch/
+scratch/
+tmp/
+temp/
+
+# Desktop installers placed into the marketing site for direct download
+# (served from /downloads — keep the folder, ignore the binaries).
+apps/marketing/public/downloads/*
+!apps/marketing/public/downloads/.gitkeep
+!apps/marketing/public/downloads/README.md
+
+# Misc
+.turbo/
+.cache/
+*.local
+
+REFERENCE/
