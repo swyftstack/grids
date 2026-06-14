@@ -46,7 +46,7 @@ rustls-pki-types = "1"
 webpki-roots = "0.26"
 
 # Local application store
-rusqlite = { version = "0.32", features = ["bundled"] }
+rusqlite = { version = "0.40", features = ["bundled"] }
 # OS keychain for credentials
 keyring = { version = "3", features = ["apple-native", "windows-native", "linux-native"] }
 
