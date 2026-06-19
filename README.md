@@ -7,16 +7,26 @@
 A keyboard-first, local-first open-source alternative to pgAdmin and DBeaver — built for speed,
 simplicity, and exceptional design. Connect to anything, even databases behind an SSH bastion or jump host.
 
-[![License: MIT](https://img.shields.io/badge/License-MIT-black.svg)](./LICENSE)
+[![Latest release](https://img.shields.io/github/v/release/swyftstack/grids?sort=semver&label=release&color=f97316)](https://github.com/swyftstack/grids/releases/latest)
 [![CI](https://github.com/swyftstack/grids/actions/workflows/ci.yml/badge.svg)](https://github.com/swyftstack/grids/actions/workflows/ci.yml)
-[![PostgreSQL](https://img.shields.io/badge/PostgreSQL-12--17-336791.svg)](https://www.postgresql.org/)
-[![Built with Tauri](https://img.shields.io/badge/built%20with-Tauri-24C8DB.svg)](https://tauri.app/)
+[![Downloads](https://img.shields.io/github/downloads/swyftstack/grids/total?color=22c55e&label=downloads)](https://github.com/swyftstack/grids/releases)
+[![Docker](https://img.shields.io/badge/docker-ghcr.io-2496ED?logo=docker&logoColor=white)](https://github.com/swyftstack/grids/pkgs/container/grids)
+[![Platforms](https://img.shields.io/badge/platforms-Windows%20%7C%20macOS%20%7C%20Linux-555)](#installation)
+[![License: MIT](https://img.shields.io/badge/license-MIT-black.svg)](./LICENSE)
+[![PostgreSQL](https://img.shields.io/badge/PostgreSQL-12--17-336791.svg?logo=postgresql&logoColor=white)](https://www.postgresql.org/)
+[![Built with Tauri](https://img.shields.io/badge/built%20with-Tauri-24C8DB.svg?logo=tauri)](https://tauri.app/)
 
-[**Live demo**](https://grids.swyftstack.com/demo) · [Download](#download) · [Documentation](./docs/README.md) · [Self-hosting](./docs/self-hosting.md) · [Contributing](./CONTRIBUTING.md)
+[**Live demo**](https://grids.swyftstack.com/demo) · [**Download**](#installation) · [Documentation](./docs/README.md) · [Changelog](./CHANGELOG.md) · [Self-hosting](./docs/self-hosting.md) · [Contributing](./CONTRIBUTING.md)
 
 </div>
 
 ---
+
+<div align="center">
+
+[![Swyftgrids — the modern PostgreSQL client](./assets/screenshots/hero.svg)](https://grids.swyftstack.com/demo)
+
+</div>
 
 ## Why Swyftgrids?
 
@@ -51,23 +61,79 @@ Swyftgrids is the tool we wanted in 2026:
 | **Production Safety**             | Confirmation for `DELETE` / `TRUNCATE` / `DROP`, estimated affected rows, production banner                       |
 | **AI (optional, off by default)** | NL→SQL, explain, optimize, error explanation — bring your own key (OpenAI, Anthropic, Gemini, OpenRouter, Ollama) |
 
-## Download
+## Screenshots
 
-Prebuilt installers are on the [Releases page](https://github.com/swyftstack/grids/releases):
+|                                                    |                                                              |
+| -------------------------------------------------- | ------------------------------------------------------------ |
+| ![SQL editor](./assets/screenshots/sql-editor.svg) | ![Table browser](./assets/screenshots/table-browser.svg)     |
+| ![ER diagram](./assets/screenshots/er-diagram.svg) | ![Database health](./assets/screenshots/database-health.svg) |
 
-| Platform | File                              |
-| -------- | --------------------------------- |
-| Windows  | `Swyftgrids_x.y.z_x64-setup.exe`  |
-| macOS    | `Swyftgrids_x.y.z_universal.dmg`  |
-| Linux    | `Swyftgrids_x.y.z_amd64.AppImage` |
+<div align="center">
 
-Prefer the browser? Try the [**live demo**](https://grids.swyftstack.com/demo), or run the
-[self-hosted web version](./docs/self-hosting.md) with Docker:
+![AI workspace](./assets/screenshots/ai-workspace.svg)
+
+</div>
+
+> The images above are on-brand mockups so the project looks complete out of the box. See
+> [`assets/screenshots`](./assets/screenshots/) to swap in real captures.
+
+## Installation
+
+Grab the latest installer from the [**Downloads page**](https://grids.swyftstack.com/downloads) or
+directly from [**GitHub Releases**](https://github.com/swyftstack/grids/releases/latest). Every
+release ships a `checksums.txt` (SHA-256) so you can verify your download.
+
+| Platform    | File                                                         |
+| ----------- | ------------------------------------------------------------ |
+| **Windows** | `Swyftgrids_<version>_x64-setup.exe` (NSIS)                  |
+| **macOS**   | `Swyftgrids_<version>_universal.dmg` (Apple Silicon + Intel) |
+| **Linux**   | `Swyftgrids_<version>_amd64.AppImage` (also `.deb`)          |
+
+### Windows
+
+Download and run `Swyftgrids-Setup.exe`, then follow the installer. Builds aren't code-signed yet,
+so SmartScreen may warn on first launch — choose **More info → Run anyway**.
+
+### macOS
+
+Open the `.dmg` and drag **Swyftgrids** to Applications. The build isn't notarized yet, so the first
+launch needs **right-click → Open** (or `xattr -dr com.apple.quarantine /Applications/Swyftgrids.app`).
+The DMG is universal — it runs natively on Apple Silicon and Intel.
+
+### Linux
+
+```bash
+chmod +x Swyftgrids_*_amd64.AppImage
+./Swyftgrids_*_amd64.AppImage
+```
+
+Prefer a package? Install the `.deb` with `sudo apt install ./Swyftgrids_*_amd64.deb`.
+
+### Docker (self-hosted web version)
+
+Run the web app on your own infrastructure with a single admin login:
 
 ```bash
 docker run -d --name swyftgrids -p 4000:4000 -v swyftgrids-data:/data ghcr.io/swyftstack/grids:latest
 # open http://localhost:4000
 ```
+
+Or with Compose: `docker compose -f docker/docker-compose.yml up -d`. Images are published to
+`ghcr.io/swyftstack/grids` (tags: `latest` and each `vX.Y.Z`). See the
+[self-hosting guide](./docs/self-hosting.md).
+
+### Verify your download
+
+```bash
+# macOS / Linux
+shasum -a 256 -c checksums.txt
+
+# Windows (PowerShell)
+Get-FileHash .\Swyftgrids-Setup.exe -Algorithm SHA256
+```
+
+Prefer the browser first? Try the [**live demo**](https://grids.swyftstack.com/demo) — sample data,
+no signup.
 
 ## Quick start
 
@@ -127,6 +193,8 @@ full [Architecture guide](./docs/architecture.md).
 - [Security](./docs/security.md) — threat model, secrets, host-key verification, production safety
 - [Self-Hosting](./docs/self-hosting.md) — Docker + admin authentication
 - [Architecture](./docs/architecture.md) — internals, IPC contract, working on Swyftgrids
+- [Releasing](./docs/releasing.md) — the automated release & distribution pipeline
+- [Changelog](./CHANGELOG.md) — version history (Added / Changed / Fixed)
 
 ## Contributing
 

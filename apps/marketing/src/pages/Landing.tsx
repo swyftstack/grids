@@ -1,4 +1,4 @@
-import { useEffect, useState, type ComponentType, type ReactNode } from 'react';
+import { useState, type ComponentType, type ReactNode } from 'react';
 import {
   Play,
   Github,
@@ -26,15 +26,10 @@ import { cn } from '@swyftgrid/ui';
 import { AppPreview } from '@/components/AppPreview';
 import { SqlEditorShot, TableBrowserShot, ErdShot, HealthShot } from '@/components/Shots';
 import { PrimaryLink, OutlineLink } from '@/components/cta';
-import { LINKS, DOWNLOADS, VERSION_LABEL, type OsKey } from '@/lib/brand';
-import { detectOS } from '@/lib/os';
-
-/** Detect the visitor's OS on the client so we can lead with the right installer. */
-function useDetectedOS(): OsKey {
-  const [os, setOS] = useState<OsKey>('windows');
-  useEffect(() => setOS(detectOS()), []);
-  return os;
-}
+import { Link } from '@/lib/router';
+import { LINKS, DOWNLOADS, ROUTES, VERSION_LABEL, type OsKey } from '@/lib/brand';
+import { useDetectedOS } from '@/lib/os';
+import { useLatestRelease, downloadHref } from '@/lib/releases';
 
 export function Landing() {
   return (
@@ -88,7 +83,9 @@ function Heading({ title, sub }: { title: ReactNode; sub?: ReactNode }) {
 
 function Hero() {
   const os = useDetectedOS();
+  const { data: latest } = useLatestRelease();
   const target = DOWNLOADS[os];
+  const href = downloadHref(os, latest);
   return (
     <div className="relative overflow-hidden">
       <div className="pointer-events-none absolute inset-0 hero-grid" aria-hidden="true" />
@@ -113,7 +110,7 @@ function Hero() {
           </p>
 
           <div className="mt-8 flex flex-wrap items-center justify-center gap-3">
-            <PrimaryLink href={target.url} download>
+            <PrimaryLink href={href} download>
               <Download className="h-4 w-4" /> Download for {target.short}
             </PrimaryLink>
             <OutlineLink href={LINKS.demo} target="_blank" rel="noreferrer">
@@ -122,9 +119,12 @@ function Hero() {
           </div>
           <div className="mt-3 text-xs text-content-subtle">
             Free · {target.file} ·{' '}
-            <a href="#download" className="text-content-muted hover:text-content hover:underline">
-              other platforms
-            </a>
+            <Link
+              to={ROUTES.downloads}
+              className="text-content-muted hover:text-content hover:underline"
+            >
+              all platforms
+            </Link>
           </div>
 
           <div className="mt-6 flex flex-wrap items-center justify-center gap-x-5 gap-y-2 text-xs text-content-subtle">
@@ -390,9 +390,9 @@ function AiSection() {
 function SelfHosting() {
   const compose = `services:
   swyftgrids:
-    image: swyftstack/grids:latest
+    image: ghcr.io/swyftstack/grids:latest
     ports:
-      - "3000:3000"
+      - "4000:4000"
     volumes:
       - swyftgrids_data:/data
 
@@ -561,6 +561,7 @@ const PLATFORM_ICON: Record<OsKey, ComponentType<{ className?: string }>> = {
 
 function Downloads() {
   const os = useDetectedOS();
+  const { data: latest } = useLatestRelease();
   const platforms = [DOWNLOADS.windows, DOWNLOADS.mac, DOWNLOADS.linux];
   return (
     <div className="border-y border-border bg-surface/40">
@@ -574,6 +575,7 @@ function Downloads() {
           {platforms.map((p) => {
             const Icon = PLATFORM_ICON[p.os];
             const detected = p.os === os;
+            const href = downloadHref(p.os, latest);
             return (
               <div
                 key={p.os}
@@ -592,7 +594,7 @@ function Downloads() {
                 </div>
                 <h3 className="mt-4 text-base font-semibold">{p.label}</h3>
                 <p className="mt-1 text-xs text-content-subtle">{p.note}</p>
-                <PrimaryLink href={p.url} download className="mt-5 w-full">
+                <PrimaryLink href={href} download className="mt-5 w-full">
                   <Download className="h-4 w-4" /> Download
                 </PrimaryLink>
                 <code className="mt-3 text-2xs text-content-subtle">{p.file}</code>
@@ -678,7 +680,9 @@ function Faq() {
 
 function FinalCta() {
   const os = useDetectedOS();
+  const { data: latest } = useLatestRelease();
   const target = DOWNLOADS[os];
+  const href = downloadHref(os, latest);
   return (
     <Section className="py-24">
       <div className="relative overflow-hidden rounded-3xl border border-accent/30 bg-gradient-to-b from-accent-soft/60 to-surface px-6 py-16 text-center">
@@ -689,7 +693,7 @@ function FinalCta() {
           Download it free, or explore the live demo right now in your browser.
         </p>
         <div className="mt-8 flex flex-wrap items-center justify-center gap-3">
-          <PrimaryLink href={target.url} download>
+          <PrimaryLink href={href} download>
             <Download className="h-4 w-4" /> Download for {target.short}
           </PrimaryLink>
           <OutlineLink href={LINKS.demo} target="_blank" rel="noreferrer">

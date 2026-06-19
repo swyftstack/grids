@@ -1,9 +1,37 @@
 import { useState } from 'react';
-import { Github, Moon, Sun, Menu, X, Play } from 'lucide-react';
+import { Github, Moon, Sun, Menu, X, Play, Download } from 'lucide-react';
 import { cn } from '@swyftgrid/ui';
 import { Logo } from './Logo';
-import { PrimaryLink } from './cta';
-import { LINKS, NAV_LINKS } from '@/lib/brand';
+import { primaryClass } from './cta';
+import { Link } from '@/lib/router';
+import { LINKS, NAV_LINKS, ROUTES, type NavLink } from '@/lib/brand';
+
+const linkCls =
+  'rounded-md px-3 py-1.5 text-sm text-content-muted transition-colors hover:text-content';
+
+function NavItem({
+  link,
+  onClick,
+  className,
+}: {
+  link: NavLink;
+  onClick?: () => void;
+  className?: string;
+}) {
+  const cls = cn(linkCls, className);
+  if (link.to) {
+    return (
+      <Link to={link.to} onClick={onClick} className={cls}>
+        {link.label}
+      </Link>
+    );
+  }
+  return (
+    <a href={link.href} onClick={onClick} className={cls}>
+      {link.label}
+    </a>
+  );
+}
 
 export function Nav({ dark, onToggleTheme }: { dark: boolean; onToggleTheme: () => void }) {
   const [open, setOpen] = useState(false);
@@ -11,19 +39,13 @@ export function Nav({ dark, onToggleTheme }: { dark: boolean; onToggleTheme: () 
   return (
     <header className="sticky top-0 z-50 border-b border-border/60 bg-bg/80 backdrop-blur-md">
       <div className="mx-auto flex h-16 max-w-6xl items-center justify-between px-5">
-        <a href="#top" aria-label="Swyftgrids home">
+        <Link to={ROUTES.home} aria-label="Swyftgrids home">
           <Logo />
-        </a>
+        </Link>
 
         <nav className="hidden items-center gap-0.5 md:flex">
           {NAV_LINKS.map((l) => (
-            <a
-              key={l.href}
-              href={l.href}
-              className="rounded-md px-3 py-1.5 text-sm text-content-muted transition-colors hover:text-content"
-            >
-              {l.label}
-            </a>
+            <NavItem key={l.label} link={l} />
           ))}
         </nav>
 
@@ -52,9 +74,12 @@ export function Nav({ dark, onToggleTheme }: { dark: boolean; onToggleTheme: () 
           >
             <Play className="h-3.5 w-3.5" /> Live demo
           </a>
-          <PrimaryLink href="#download" className="hidden px-3.5 py-2 sm:inline-flex">
-            Download
-          </PrimaryLink>
+          <Link
+            to={ROUTES.downloads}
+            className={cn(primaryClass, 'hidden px-3.5 py-2 sm:inline-flex')}
+          >
+            <Download className="h-3.5 w-3.5" /> Download
+          </Link>
           <button
             onClick={() => setOpen((o) => !o)}
             aria-label="Menu"
@@ -69,14 +94,12 @@ export function Nav({ dark, onToggleTheme }: { dark: boolean; onToggleTheme: () 
         <div className={cn('border-t border-border bg-bg px-5 py-3 md:hidden')}>
           <nav className="flex flex-col gap-1">
             {NAV_LINKS.map((l) => (
-              <a
-                key={l.href}
-                href={l.href}
+              <NavItem
+                key={l.label}
+                link={l}
                 onClick={() => setOpen(false)}
-                className="rounded-md px-2 py-2 text-sm text-content-muted hover:bg-surface-2 hover:text-content"
-              >
-                {l.label}
-              </a>
+                className="px-2 py-2 hover:bg-surface-2"
+              />
             ))}
             <div className="mt-2 flex gap-2">
               <a
@@ -87,9 +110,13 @@ export function Nav({ dark, onToggleTheme }: { dark: boolean; onToggleTheme: () 
               >
                 <Play className="h-3.5 w-3.5" /> Live demo
               </a>
-              <PrimaryLink href="#download" className="flex-1">
-                Download
-              </PrimaryLink>
+              <Link
+                to={ROUTES.downloads}
+                onClick={() => setOpen(false)}
+                className="flex flex-1 items-center justify-center gap-1.5 rounded-lg bg-accent px-4 py-2.5 text-sm font-semibold text-white hover:bg-[#ea6a0c]"
+              >
+                <Download className="h-3.5 w-3.5" /> Download
+              </Link>
             </div>
           </nav>
         </div>

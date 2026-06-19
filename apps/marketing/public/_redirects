@@ -1,0 +1,10 @@
+# Cloudflare Pages SPA fallback.
+# https://developers.cloudflare.com/pages/configuration/redirects/
+#
+# Real files (hashed assets, the /demo app, /downloads/* binaries) are served first by Pages.
+# Anything else falls through to index.html so client-side routes like /downloads, /releases,
+# and /changelog resolve on a direct load or refresh. The explicit /demo rule keeps the demo
+# app's own index.html in charge of its subtree.
+
+/demo/*    /demo/index.html   200
+/*         /index.html        200

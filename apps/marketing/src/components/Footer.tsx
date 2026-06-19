@@ -1,6 +1,14 @@
 import { Github } from 'lucide-react';
 import { Logo } from './Logo';
-import { LINKS } from '@/lib/brand';
+import { Link } from '@/lib/router';
+import { LINKS, ROUTES } from '@/lib/brand';
+
+interface FooterLink {
+  label: string;
+  href?: string;
+  to?: string;
+  external?: boolean;
+}
 
 export function Footer() {
   return (
@@ -24,19 +32,20 @@ export function Footer() {
         <FooterCol
           title="Product"
           links={[
-            { label: 'Features', href: '#features' },
-            { label: 'AI workspace', href: '#ai' },
-            { label: 'Self-hosting', href: '#self-hosting' },
-            { label: 'Pricing', href: '#pricing' },
+            { label: 'Features', href: '/#features' },
+            { label: 'AI workspace', href: '/#ai' },
+            { label: 'Self-hosting', href: '/#self-hosting' },
+            { label: 'Pricing', href: '/#pricing' },
             { label: 'Live demo', href: LINKS.demo, external: true },
           ]}
         />
         <FooterCol
           title="Resources"
           links={[
+            { label: 'Downloads', to: ROUTES.downloads },
+            { label: 'Releases', to: ROUTES.releases },
+            { label: 'Changelog', to: ROUTES.changelog },
             { label: 'Documentation', href: `${LINKS.github}#readme`, external: true },
-            { label: 'Download', href: '#download' },
-            { label: 'FAQ', href: '#faq' },
             { label: 'Report an issue', href: `${LINKS.github}/issues`, external: true },
           ]}
         />
@@ -58,13 +67,9 @@ export function Footer() {
   );
 }
 
-function FooterCol({
-  title,
-  links,
-}: {
-  title: string;
-  links: { label: string; href: string; external?: boolean }[];
-}) {
+const itemCls = 'text-sm text-content-muted transition-colors hover:text-content';
+
+function FooterCol({ title, links }: { title: string; links: FooterLink[] }) {
   return (
     <div>
       <h3 className="mb-3 text-xs font-semibold uppercase tracking-wide text-content-subtle">
@@ -73,13 +78,19 @@ function FooterCol({
       <ul className="space-y-2">
         {links.map((l) => (
           <li key={l.label}>
-            <a
-              href={l.href}
-              {...(l.external ? { target: '_blank', rel: 'noreferrer' } : {})}
-              className="text-sm text-content-muted transition-colors hover:text-content"
-            >
-              {l.label}
-            </a>
+            {l.to ? (
+              <Link to={l.to} className={itemCls}>
+                {l.label}
+              </Link>
+            ) : (
+              <a
+                href={l.href}
+                {...(l.external ? { target: '_blank', rel: 'noreferrer' } : {})}
+                className={itemCls}
+              >
+                {l.label}
+              </a>
+            )}
           </li>
         ))}
       </ul>

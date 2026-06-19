@@ -1,17 +1,51 @@
 name: Release
 
+# Push a semver tag (e.g. `git tag v1.0.0 && git push origin v1.0.0`) and this workflow:
+#   1. verifies the codebase (lint, typecheck, test, build)
+#   2. builds desktop installers for Windows / macOS / Linux (Tauri)
+#   3. builds & pushes the Docker image (GHCR, and Docker Hub if configured)
+#   4. generates SHA-256 checksums and release notes, then publishes the GitHub Release
+# No manual steps are required.
 on:
   push:
     tags:
       - 'v*'
 
 permissions:
-  contents: write
-  packages: write
+  contents: write # create/edit releases and upload assets
+  packages: write # push images to GitHub Container Registry
 
 jobs:
+  # ── 1. Gate: fail fast before spending matrix/runner minutes on a broken commit ──
+  verify:
+    name: Verify (lint, typecheck, test, build)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4 # version from package.json "packageManager"
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: pnpm
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+      - name: Build shared packages
+        run: pnpm --filter @swyftgrid/core build
+      - name: Lint
+        run: pnpm lint
+      - name: Typecheck
+        run: pnpm typecheck
+      - name: Test
+        run: pnpm test
+      - name: Build desktop frontend
+        run: pnpm --filter @swyftgrid/desktop exec vite build
+      - name: Build web server
+        run: pnpm --filter @swyftgrid/web build
+
+  # ── 2. Desktop installers (Windows .exe / macOS .dmg / Linux .AppImage + .deb) ──
   desktop:
     name: Build desktop installers
+    needs: verify
     # Exposed to step `if:` guards so the R2 upload is skipped when R2 isn't configured.
     env:
       R2_ACCOUNT_ID: ${{ secrets.R2_ACCOUNT_ID }}
@@ -29,9 +63,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - uses: pnpm/action-setup@v4
-        with:
-          version: 9
+      - uses: pnpm/action-setup@v4 # version from package.json "packageManager"
 
       - uses: actions/setup-node@v4
         with:
@@ -66,7 +98,8 @@ jobs:
           projectPath: apps/desktop
           tagName: ${{ github.ref_name }}
           releaseName: 'Swyftgrids ${{ github.ref_name }}'
-          releaseBody: 'See the assets below to download and install Swyftgrids for your platform.'
+          # Real notes + checksums are added by the `finalize` job, which then publishes.
+          releaseBody: 'Building release assets… notes and checksums will appear shortly.'
           releaseDraft: true
           prerelease: false
           args: ${{ matrix.args }}
@@ -109,9 +142,13 @@ jobs:
             --content-disposition "attachment; filename=\"${name}\"" \
             --cache-control "public, max-age=31536000, immutable"
 
+  # ── 3. Docker image: GitHub Container Registry (always) + Docker Hub (if configured) ──
   docker:
     name: Build & push Docker image
+    needs: verify
     runs-on: ubuntu-latest
+    env:
+      DOCKERHUB_USERNAME: ${{ secrets.DOCKERHUB_USERNAME }}
     steps:
       - uses: actions/checkout@v4
 
@@ -124,11 +161,34 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
+      # Optional Docker Hub publish (e.g. swyftstack/grids:latest). Skipped unless the
+      # DOCKERHUB_USERNAME / DOCKERHUB_TOKEN secrets are set.
+      - name: Log in to Docker Hub
+        if: ${{ env.DOCKERHUB_USERNAME != '' }}
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+      - name: Compose target image list
+        id: images
+        run: |
+          set -euo pipefail
+          imgs="ghcr.io/${GITHUB_REPOSITORY,,}"
+          if [ -n "${DOCKERHUB_USERNAME}" ]; then
+            imgs="${imgs}"$'\n'"docker.io/${DOCKERHUB_USERNAME}/grids"
+          fi
+          {
+            echo "list<<EOF"
+            echo "${imgs}"
+            echo "EOF"
+          } >> "$GITHUB_OUTPUT"
+
       - name: Extract metadata
         id: meta
         uses: docker/metadata-action@v5
         with:
-          images: ghcr.io/${{ github.repository }}
+          images: ${{ steps.images.outputs.list }}
           tags: |
             type=semver,pattern={{version}}
             type=semver,pattern={{major}}.{{minor}}
@@ -144,3 +204,48 @@ jobs:
           labels: ${{ steps.meta.outputs.labels }}
           cache-from: type=gha
           cache-to: type=gha,mode=max
+
+  # ── 4. Finalize: checksums + auto-generated notes, then publish the release ──
+  finalize:
+    name: Finalize release (checksums, notes, publish)
+    needs: [desktop]
+    runs-on: ubuntu-latest
+    env:
+      GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      TAG: ${{ github.ref_name }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0 # full history so release notes can diff against the previous tag
+
+      - name: Download release assets
+        run: |
+          set -euo pipefail
+          mkdir -p dist-assets
+          gh release download "$TAG" --dir dist-assets --repo "$GITHUB_REPOSITORY"
+          ls -lh dist-assets
+
+      - name: Generate checksums.txt
+        working-directory: dist-assets
+        run: |
+          set -euo pipefail
+          rm -f checksums.txt
+          # Hash every installer artifact; list bare filenames so `sha256sum -c` works after download.
+          sha256sum -- * | tee checksums.txt
+          mv checksums.txt ../checksums.txt
+
+      - name: Upload checksums.txt
+        run: gh release upload "$TAG" checksums.txt --clobber --repo "$GITHUB_REPOSITORY"
+
+      - name: Generate release notes
+        run: node scripts/release-notes.mjs "$TAG" --repo "$GITHUB_REPOSITORY" | tee notes.md
+
+      - name: Publish release
+        run: |
+          set -euo pipefail
+          gh release edit "$TAG" \
+            --repo "$GITHUB_REPOSITORY" \
+            --title "Swyftgrids $TAG" \
+            --notes-file notes.md \
+            --draft=false \
+            --latest
