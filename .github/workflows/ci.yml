@@ -19,8 +19,8 @@ jobs:
 
       # No `version:` here on purpose — the pnpm version comes from the
       # `packageManager` field in package.json. Pinning it in both places makes
-      # pnpm/action-setup@v4 abort with "Multiple versions of pnpm specified".
-      - uses: pnpm/action-setup@v4
+      # pnpm/action-setup@v6 abort with "Multiple versions of pnpm specified".
+      - uses: pnpm/action-setup@v6
 
       - uses: actions/setup-node@v4
         with:
