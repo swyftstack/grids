@@ -397,7 +397,21 @@ const handlers: Record<string, (p: any) => unknown> = {
   },
   'connections.test': async ({ config }) => {
     await delay(350);
-    if (!config.host) return { ok: false, error: 'Host is required' };
+    // When a connection string is supplied it is the source of truth — validate it the way the real
+    // backend does (a parseable postgres:// URL) instead of blindly reporting success.
+    if (config.connectionString) {
+      try {
+        const u = new URL(config.connectionString);
+        if (!/^postgres(ql)?:$/.test(u.protocol) || !u.hostname) throw new Error('bad url');
+      } catch {
+        return {
+          ok: false,
+          error: 'Invalid connection string. Expected postgres://user:password@host:5432/database',
+        };
+      }
+    } else if (!config.host) {
+      return { ok: false, error: 'Host is required' };
+    }
     const hops: SshHostConfig[] = config.ssh?.hops ?? [];
     const usesSsh = config.method && config.method !== 'direct' && hops.length > 0;
     if (usesSsh) {

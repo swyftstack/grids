@@ -46,9 +46,11 @@ jobs:
   desktop:
     name: Build desktop installers
     needs: verify
-    # Exposed to step `if:` guards so the R2 upload is skipped when R2 isn't configured.
+    # Exposed to step `if:` guards (a step `if:` cannot read `secrets` directly) so the R2 upload
+    # and Windows code signing are skipped when their secrets aren't configured.
     env:
       R2_ACCOUNT_ID: ${{ secrets.R2_ACCOUNT_ID }}
+      WINDOWS_CERTIFICATE: ${{ secrets.WINDOWS_CERTIFICATE }}
     strategy:
       fail-fast: false
       matrix:
@@ -90,10 +92,43 @@ jobs:
       - name: Build shared packages
         run: pnpm --filter @swyftgrid/core build
 
+      # Windows Authenticode signing. Import an OV/EV code-signing certificate (the .pfx file,
+      # base64-encoded, in the WINDOWS_CERTIFICATE secret) into the runner's store and pin its
+      # thumbprint into tauri.conf.json so Tauri signs the NSIS installer. Without this the installer
+      # is unsigned and Windows SmartScreen warns users. Skipped when the secret is absent.
+      # See docs/code-signing.md. Note: SmartScreen only fully clears with an EV cert (or after an
+      # OV-signed installer builds enough download reputation).
+      - name: Set up Windows code signing
+        if: matrix.platform == 'windows-latest' && env.WINDOWS_CERTIFICATE != ''
+        shell: pwsh
+        env:
+          WINDOWS_CERTIFICATE: ${{ secrets.WINDOWS_CERTIFICATE }}
+          WINDOWS_CERTIFICATE_PASSWORD: ${{ secrets.WINDOWS_CERTIFICATE_PASSWORD }}
+        run: |
+          $pfxPath = Join-Path $env:RUNNER_TEMP 'code-sign.pfx'
+          [IO.File]::WriteAllBytes($pfxPath, [Convert]::FromBase64String($env:WINDOWS_CERTIFICATE))
+          $securePwd = ConvertTo-SecureString $env:WINDOWS_CERTIFICATE_PASSWORD -AsPlainText -Force
+          $cert = Import-PfxCertificate -FilePath $pfxPath -CertStoreLocation Cert:\CurrentUser\My -Password $securePwd
+          Remove-Item $pfxPath -Force
+          $conf = 'apps/desktop/src-tauri/tauri.conf.json'
+          $json = Get-Content $conf -Raw | ConvertFrom-Json
+          $json.bundle.windows | Add-Member -NotePropertyName certificateThumbprint -NotePropertyValue $cert.Thumbprint -Force
+          $json | ConvertTo-Json -Depth 32 | Set-Content $conf -Encoding utf8
+          Write-Host "Configured Windows signing (thumbprint $($cert.Thumbprint))."
+
       - name: Build & release Tauri app
         uses: tauri-apps/tauri-action@v0
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          # macOS code signing + notarization (Apple Developer ID). tauri-action signs and notarizes
+          # automatically when these are set; absent = an unsigned/ad-hoc build (Gatekeeper warns).
+          # See docs/code-signing.md.
+          APPLE_CERTIFICATE: ${{ secrets.APPLE_CERTIFICATE }}
+          APPLE_CERTIFICATE_PASSWORD: ${{ secrets.APPLE_CERTIFICATE_PASSWORD }}
+          APPLE_SIGNING_IDENTITY: ${{ secrets.APPLE_SIGNING_IDENTITY }}
+          APPLE_ID: ${{ secrets.APPLE_ID }}
+          APPLE_PASSWORD: ${{ secrets.APPLE_PASSWORD }}
+          APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
         with:
           projectPath: apps/desktop
           tagName: ${{ github.ref_name }}
@@ -243,9 +278,14 @@ jobs:
       - name: Publish release
         run: |
           set -euo pipefail
+          # Two API calls on purpose. GitHub validates `make_latest=true` against the release's
+          # *current* state, so sending `--draft=false` and `--latest` in one PATCH fails with
+          # "HTTP 422: Latest release cannot be draft or prerelease". Publish first, then promote.
           gh release edit "$TAG" \
             --repo "$GITHUB_REPOSITORY" \
             --title "Swyftgrids $TAG" \
             --notes-file notes.md \
-            --draft=false \
+            --draft=false
+          gh release edit "$TAG" \
+            --repo "$GITHUB_REPOSITORY" \
             --latest

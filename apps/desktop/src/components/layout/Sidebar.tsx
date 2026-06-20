@@ -115,9 +115,13 @@ export function Sidebar() {
     <aside className="flex w-60 shrink-0 flex-col bg-surface">
       {/* Brand */}
       <div className="flex items-center gap-2 px-3 pb-1 pt-3">
-        <div className="grid h-6 w-6 place-items-center rounded-md bg-accent text-[11px] font-bold text-accent-fg">
-          S
-        </div>
+        <img
+          src="/swyftgrids-logo.png"
+          alt="Swyftgrids"
+          width={24}
+          height={24}
+          className="h-6 w-6 rounded-md"
+        />
         <span className="select-none text-sm font-semibold tracking-tight">Swyftgrids</span>
       </div>
 

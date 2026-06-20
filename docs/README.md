@@ -17,6 +17,7 @@ pgAdmin and DBeaver. Run it as a desktop app, or self-host the web version for y
 | [Architecture](./architecture.md)           | How it's built, the IPC contract, and how to work on Swyftgrids.     |
 | [Cloudflare Deploy](./cloudflare-deploy.md) | Deploy the marketing site + live demo to Cloudflare Pages.           |
 | [Releasing](./releasing.md)                 | The automated release pipeline: tag, build, publish, downloads.      |
+| [Code Signing](./code-signing.md)           | Sign installers so Windows SmartScreen / macOS Gatekeeper don't warn. |
 
 See also: [Contributing](../CONTRIBUTING.md) · [Security Policy](../SECURITY.md) ·
 [Code of Conduct](../CODE_OF_CONDUCT.md).

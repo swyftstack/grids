@@ -24,7 +24,6 @@ import {
 } from 'lucide-react';
 import { cn } from '@swyftgrid/ui';
 import { AppPreview } from '@/components/AppPreview';
-import { SqlEditorShot, TableBrowserShot, ErdShot, HealthShot } from '@/components/Shots';
 import { PrimaryLink, OutlineLink } from '@/components/cta';
 import { Link } from '@/lib/router';
 import { LINKS, DOWNLOADS, ROUTES, VERSION_LABEL, type OsKey } from '@/lib/brand';
@@ -178,41 +177,60 @@ function TrustStrip() {
 // ─────────────────────────────── Showcase ───────────────────────────────
 
 const SHOWCASE: {
-  shot: ComponentType;
+  image: string;
+  alt: string;
   eyebrow: string;
   title: string;
   body: string;
   points: string[];
 }[] = [
   {
-    shot: SqlEditorShot,
-    eyebrow: 'SQL editor',
-    title: 'Write, run, and reuse SQL',
-    body: 'A multi-tab editor with PostgreSQL autocomplete, formatting, query history, and saved queries.',
-    points: ['Execution stats', 'CSV and JSON export'],
+    image: '/screenshots/swyftgrids-schema.png',
+    alt: 'Swyftgrids schema explorer',
+    eyebrow: 'Schema explorer',
+    title: 'Explore your whole schema',
+    body: 'Tables, views, functions, triggers, indexes, and constraints — all browsable, with SQL and a live diagram a click away.',
+    points: ['Multi-tab editor', 'Autocomplete and formatting'],
   },
   {
-    shot: TableBrowserShot,
-    eyebrow: 'Table browser',
-    title: 'Browse data like a spreadsheet',
-    body: 'Fast, virtualized rows with inline editing, filtering, and one-click foreign-key navigation.',
-    points: ['Inline editing', 'Follow relationships'],
-  },
-  {
-    shot: ErdShot,
+    image: '/screenshots/swyftgrids-er-diagram.png',
+    alt: 'Swyftgrids ER diagram',
     eyebrow: 'ER diagrams',
     title: 'See your schema at a glance',
     body: 'Interactive diagrams generated automatically, with zoom, pan, search, and image export.',
     points: ['Auto-generated', 'Export to PNG or SVG'],
   },
   {
-    shot: HealthShot,
+    image: '/screenshots/swyftgrids-health.png',
+    alt: 'Swyftgrids database health',
     eyebrow: 'Health and performance',
     title: 'Know your database is healthy',
     body: 'One health score across indexes, bloat, dead tuples, query performance, and storage.',
     points: ['Missing-index hints', 'Slow-query insights'],
   },
+  {
+    image: '/screenshots/swyftgrids-monitoring.png',
+    alt: 'Swyftgrids realtime monitoring',
+    eyebrow: 'Realtime monitoring',
+    title: 'Watch your server live',
+    body: 'Live connections, transactions per second, cache hit ratio, CPU, and memory as they happen.',
+    points: ['Realtime charts', 'Production-aware'],
+  },
 ];
+
+/** A macOS-style window frame around a real product screenshot. */
+function ShotFrame({ image, alt }: { image: string; alt: string }) {
+  return (
+    <div className="overflow-hidden rounded-xl border border-border bg-surface shadow-[0_24px_60px_-30px_rgba(0,0,0,0.55)]">
+      <div className="flex items-center gap-2 border-b border-border bg-surface-2/60 px-3 py-2">
+        <span className="h-2.5 w-2.5 rounded-full bg-[#ff5f57]" />
+        <span className="h-2.5 w-2.5 rounded-full bg-[#febc2e]" />
+        <span className="h-2.5 w-2.5 rounded-full bg-[#28c840]" />
+      </div>
+      <img src={image} alt={alt} loading="lazy" className="block w-full" />
+    </div>
+  );
+}
 
 function Showcase() {
   return (
@@ -235,7 +253,7 @@ function Showcase() {
             </div>
           </div>
           <div className={cn(i % 2 === 1 && 'lg:order-1')}>
-            <s.shot />
+            <ShotFrame image={s.image} alt={s.alt} />
           </div>
         </div>
       ))}

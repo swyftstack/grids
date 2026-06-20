@@ -158,8 +158,9 @@ export const defaultSshHostConfig: SshHostConfig = {
 };
 
 /**
- * Sensible defaults for a brand new connection form. SSH tunnelling is the primary way to connect to
- * production databases, so a new connection starts as an `ssh-tunnel` with one (empty) hop.
+ * Sensible defaults for a brand new connection form. Most databases are reached directly, so a new
+ * connection starts as `direct` with no SSH config — switching to a tunnelling method in the form
+ * adds the SSH hop(s) on demand.
  */
 export const defaultConnectionConfig: ConnectionConfig = {
   host: 'localhost',
@@ -168,6 +169,5 @@ export const defaultConnectionConfig: ConnectionConfig = {
   username: 'postgres',
   password: '',
   ssl: { mode: 'prefer' },
-  method: 'ssh-tunnel',
-  ssh: { hops: [{ ...defaultSshHostConfig }] },
+  method: 'direct',
 };

@@ -24,7 +24,7 @@ simplicity, and exceptional design. Connect to anything, even databases behind a
 
 <div align="center">
 
-[![Swyftgrids — the modern PostgreSQL client](./assets/screenshots/hero.svg)](https://grids.swyftstack.com/demo)
+[![Swyftgrids — the modern PostgreSQL client](./assets/screenshots/swyftgrids-dashboard.png)](https://grids.swyftstack.com/demo)
 
 </div>
 
@@ -63,19 +63,16 @@ Swyftgrids is the tool we wanted in 2026:
 
 ## Screenshots
 
-|                                                    |                                                              |
-| -------------------------------------------------- | ------------------------------------------------------------ |
-| ![SQL editor](./assets/screenshots/sql-editor.svg) | ![Table browser](./assets/screenshots/table-browser.svg)     |
-| ![ER diagram](./assets/screenshots/er-diagram.svg) | ![Database health](./assets/screenshots/database-health.svg) |
+|                                                          |                                                            |
+| -------------------------------------------------------- | ---------------------------------------------------------- |
+| ![Schema explorer](./assets/screenshots/swyftgrids-schema.png) | ![ER diagram](./assets/screenshots/swyftgrids-er-diagram.png) |
+| ![Database health](./assets/screenshots/swyftgrids-health.png) | ![Realtime monitoring](./assets/screenshots/swyftgrids-monitoring.png) |
 
 <div align="center">
 
-![AI workspace](./assets/screenshots/ai-workspace.svg)
+![Schema changes](./assets/screenshots/swyftgrids-schema-changes.png)
 
 </div>
-
-> The images above are on-brand mockups so the project looks complete out of the box. See
-> [`assets/screenshots`](./assets/screenshots/) to swap in real captures.
 
 ## Installation
 
@@ -91,14 +88,18 @@ release ships a `checksums.txt` (SHA-256) so you can verify your download.
 
 ### Windows
 
-Download and run `Swyftgrids-Setup.exe`, then follow the installer. Builds aren't code-signed yet,
-so SmartScreen may warn on first launch — choose **More info → Run anyway**.
+Download and run `Swyftgrids-Setup.exe`, then follow the installer. Until a release is built with a
+code-signing certificate, SmartScreen ("Windows protected your PC") may warn on first launch —
+choose **More info → Run anyway**. This is the OS flagging an unsigned binary, not a problem with
+the app; verify your download against `checksums.txt` if unsure. See
+[Code Signing](./docs/code-signing.md) for how releases get signed.
 
 ### macOS
 
-Open the `.dmg` and drag **Swyftgrids** to Applications. The build isn't notarized yet, so the first
-launch needs **right-click → Open** (or `xattr -dr com.apple.quarantine /Applications/Swyftgrids.app`).
-The DMG is universal — it runs natively on Apple Silicon and Intel.
+Open the `.dmg` and drag **Swyftgrids** to Applications. Until a release is built with an Apple
+Developer ID certificate, Gatekeeper requires **right-click → Open** on first launch (or
+`xattr -dr com.apple.quarantine /Applications/Swyftgrids.app`). The DMG is universal — it runs
+natively on Apple Silicon and Intel. See [Code Signing](./docs/code-signing.md).
 
 ### Linux
 

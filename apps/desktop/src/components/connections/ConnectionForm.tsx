@@ -26,18 +26,19 @@ import {
 } from '@swyftgrid/core';
 import { Button, Input, cn } from '@swyftgrid/ui';
 import { invoke } from '@/lib/ipc';
+import { isDemo } from '@/lib/demo';
 import { useConnections } from '@/stores/connections';
 import { useUi } from '@/stores/ui';
 
 const SSL_MODES: SslMode[] = ['disable', 'allow', 'prefer', 'require', 'verify-ca', 'verify-full'];
 const ENVIRONMENTS: ConnectionEnvironment[] = ['development', 'staging', 'production'];
 
-/** Connection methods, in display order — SSH tunnelling is the primary way to connect. */
+/** Connection methods, in display order — most connections are direct, so it leads. */
 const METHODS: { key: ConnectionMethod; label: string; icon: typeof Server; hint: string }[] = [
+  { key: 'direct', label: 'Direct', icon: Database, hint: 'Connect straight to the database' },
   { key: 'ssh-tunnel', label: 'SSH Tunnel', icon: Server, hint: 'Forward through an SSH server' },
   { key: 'bastion', label: 'Bastion Host', icon: ShieldCheck, hint: 'Forward through a gateway' },
   { key: 'jump-host', label: 'Jump Host', icon: Network, hint: 'Chain through jump hosts' },
-  { key: 'direct', label: 'Direct', icon: Database, hint: 'Connect straight to the database' },
 ];
 
 function blank(): Connection {
@@ -71,6 +72,8 @@ export function ConnectionForm({
 }) {
   const save = useConnections((s) => s.save);
   const pushToast = useUi((s) => s.pushToast);
+  // The public demo runs on mock data only: testing or saving a real database is disabled.
+  const demo = isDemo();
   const [draft, setDraft] = useState<Connection>(initial ? structuredClone(initial) : blank());
   const [useConnString, setUseConnString] = useState(!!initial?.config.connectionString);
   const [testing, setTesting] = useState(false);
@@ -85,7 +88,9 @@ export function ConnectionForm({
 
   const setMethod = (next: ConnectionMethod) => {
     if (next === 'direct') {
-      setConfig({ method: 'direct' });
+      // A direct connection carries no SSH config — drop any hops so stale tunnel data never
+      // rides along (it would otherwise be persisted and confuse the backend on connect).
+      setConfig({ method: 'direct', ssh: undefined });
       return;
     }
     setConfig({ method: next, ssh: { hops: hopsForMethod(next, hops) } });
@@ -132,6 +137,10 @@ export function ConnectionForm({
   };
 
   const test = async () => {
+    if (demo) {
+      pushToast('Connecting to databases is disabled in the demo.', 'error');
+      return;
+    }
     const problem = sshProblem();
     if (problem) {
       pushToast(problem, 'error');
@@ -140,7 +149,9 @@ export function ConnectionForm({
     setTesting(true);
     setTestResult(null);
     try {
-      setTestResult(await invoke('connections.test', { config: draft.config }));
+      // Test the exact config that will be saved (no SSH for a direct connection).
+      const config = method === 'direct' ? { ...draft.config, ssh: undefined } : draft.config;
+      setTestResult(await invoke('connections.test', { config }));
     } finally {
       setTesting(false);
     }
@@ -161,6 +172,10 @@ export function ConnectionForm({
   };
 
   const submit = async () => {
+    if (demo) {
+      pushToast('Saving databases is disabled in the demo.', 'error');
+      return;
+    }
     if (!draft.name.trim()) {
       pushToast('Give the connection a name first.', 'error');
       return;
@@ -172,7 +187,10 @@ export function ConnectionForm({
     }
     setSaving(true);
     try {
-      await save({ ...draft, id: draft.id || newId('conn') });
+      // A direct connection must not carry SSH config — strip it so the backend never tries to
+      // tunnel a plain connection (which would fail with an "invalid connection config" error).
+      const config = method === 'direct' ? { ...draft.config, ssh: undefined } : draft.config;
+      await save({ ...draft, config, id: draft.id || newId('conn') });
       pushToast('Connection saved.', 'success');
       onClose();
     } catch {
@@ -427,8 +445,13 @@ export function ConnectionForm({
           )}
         </div>
 
+        {demo && (
+          <div className="border-t border-border bg-surface-2 px-5 py-2 text-center text-xs text-content-subtle">
+            Testing and saving databases are disabled in the demo.
+          </div>
+        )}
         <div className="flex items-center justify-between border-t border-border px-5 py-3">
-          <Button variant="outline" onClick={test} disabled={testing}>
+          <Button variant="outline" onClick={test} disabled={testing || demo}>
             {testing ? (
               <Loader2 className="h-3.5 w-3.5 animate-spin" />
             ) : (
@@ -440,7 +463,7 @@ export function ConnectionForm({
             <Button variant="ghost" onClick={onClose}>
               Cancel
             </Button>
-            <Button variant="primary" onClick={submit} disabled={saving}>
+            <Button variant="primary" onClick={submit} disabled={saving || demo}>
               {saving ? 'Saving…' : 'Save'}
             </Button>
           </div>
