@@ -18,13 +18,13 @@
     "@fastify/rate-limit": "^10.1.1",
     "@fastify/static": "^9.1.1",
     "@swyftgrid/core": "workspace:*",
-    "bcryptjs": "^2.4.3",
+    "bcryptjs": "^3.0.3",
     "fastify": "^5.0.0",
     "pg": "^8.13.0",
     "ssh2": "^1.16.0"
   },
   "devDependencies": {
-    "@types/bcryptjs": "^2.4.6",
+    "@types/bcryptjs": "^3.0.0",
     "@types/node": "^24.0.0",
     "@types/pg": "^8.11.10",
     "@types/ssh2": "^1.15.1",
